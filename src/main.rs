@@ -1,7 +1,7 @@
 use clap::{command, Parser, Subcommand};
 use sha1::{Digest, Sha1};
 use std::path::PathBuf;
-use zerotorrent::{bencode, Torrent};
+use zerotorrent::{bencode, torrent::Torrent};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
