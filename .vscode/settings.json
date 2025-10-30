@@ -1,0 +1,7 @@
+{
+  "rust-analyzer.rustfmt.overrideCommand": [
+    "rustfmt",
+    "--config",
+    "wrap_comments=true,comment_width=100,max_width=100"
+  ]
+}

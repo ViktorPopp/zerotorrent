@@ -1,6 +1,6 @@
-use clap::{Parser, Subcommand, command};
-
-mod bencode;
+use clap::{command, Parser, Subcommand};
+use std::path::PathBuf;
+use zerotorrent::{bencode, Torrent};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -16,6 +16,11 @@ enum Commands {
         #[arg()]
         value: String,
     },
+    #[command(about = "Displays information about a torrent")]
+    Info {
+        #[arg()]
+        path: PathBuf,
+    },
 }
 
 fn main() {
@@ -27,6 +32,13 @@ fn main() {
             if !rest.is_empty() {
                 println!("Remainder:     \"{rest}\"");
             }
+        }
+        Commands::Info { path } => {
+            let torrent_data = std::fs::read(path).expect("Failed to read torrent file");
+            let t: Torrent =
+                serde_bencode::from_bytes(&torrent_data).expect("Failed to parse torrent file");
+            println!("Tracker URL: {}", t.announce);
+            println!("Length:      {}", t.info.length);
         }
     }
 }
