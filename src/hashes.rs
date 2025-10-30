@@ -1,7 +1,10 @@
-use serde::de::{self, Deserialize, Deserializer, Visitor};
+use serde::{
+    de::{self, Deserialize, Deserializer, Visitor},
+    Serialize,
+};
 use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Hashes(pub Vec<[u8; 20]>);
 struct HashesVisitor;
 
