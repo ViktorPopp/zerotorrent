@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use zerotorrent::{
     torrent::Torrent,
     tracker::{TrackerRequest, TrackerResponse},
+    urlencode::urlencode,
 };
 
 #[derive(Parser, Debug)]
@@ -81,13 +82,4 @@ async fn main() {
             }
         }
     }
-}
-
-fn urlencode(t: &[u8; 20]) -> String {
-    let mut encoded = String::with_capacity(3 * t.len());
-    for &byte in t {
-        encoded.push('%');
-        encoded.push_str(&hex::encode_upper(&[byte]));
-    }
-    encoded
 }
