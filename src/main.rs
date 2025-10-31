@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand, command};
-use std::path::PathBuf;
+use std::{net::SocketAddrV4, path::PathBuf};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use zerotorrent::{
+    peers::Handshake,
     torrent::Torrent,
     tracker::{TrackerRequest, TrackerResponse},
     urlencode::urlencode,
@@ -24,6 +26,12 @@ enum Commands {
     Peers {
         #[arg()]
         path: PathBuf,
+    },
+    #[command(about = "Performs a handshake with a peer")]
+    Handshake {
+        #[arg()]
+        path: PathBuf,
+        peer: String,
     },
 }
 
@@ -80,6 +88,37 @@ async fn main() {
             for peer in &response.peers.0 {
                 println!("{}:{}", peer.ip(), peer.port());
             }
+        }
+        Commands::Handshake { path, peer } => {
+            let file_data = std::fs::read(path).expect("Failed to read torrent file");
+            let t: Torrent =
+                serde_bencode::from_bytes(&file_data).expect("Failed to parse torrent file");
+
+            let peer = peer
+                .parse::<SocketAddrV4>()
+                .expect("Failed to parse peer address");
+            let mut peer = tokio::net::TcpStream::connect(peer)
+                .await
+                .expect("Failed to connect to peer");
+
+            let mut handshake = Handshake::new(t.info_hash(), *b"00112233445566778899");
+            {
+                let handshake_bytes =
+                    &mut handshake as *mut Handshake as *mut [u8; std::mem::size_of::<Handshake>()]; // "Treat the memory of this `Handshake` struct as if it were an array of bytes”
+                // Safety: `Handshake` is using repr(C)
+                let handshake_bytes: &mut [u8; std::mem::size_of::<Handshake>()] =
+                    unsafe { &mut *handshake_bytes };
+
+                peer.write_all(handshake_bytes)
+                    .await
+                    .expect("Failed the write handshake bytes");
+                peer.read_exact(handshake_bytes)
+                    .await
+                    .expect("Failed to read handshake bytes");
+            }
+            assert_eq!(handshake.length, 19);
+            assert_eq!(&handshake.bittorrent, b"BitTorrent protocol");
+            println!("Peer ID: {}", hex::encode(&handshake.peer_id));
         }
     }
 }
