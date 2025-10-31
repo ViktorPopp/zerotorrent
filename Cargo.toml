@@ -8,6 +8,9 @@ edition = "2024"
 [dependencies]
 clap = { version = "4.5.51", features = ["derive"] }
 hex = "0.4.3"
+reqwest = "0.12.24"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_bencode = "0.2.4"
+serde_urlencoded = "0.7.1"
 sha1 = "0.10.1"
+tokio = { version = "1.48", features = ["macros", "rt-multi-thread"] }
